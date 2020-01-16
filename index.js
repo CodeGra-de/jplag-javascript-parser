@@ -4,8 +4,6 @@ const acorn = require("acorn");
 const acornLoose = require("acorn-loose");
 const { visit } = require('ast-types');
 const acornPlugins = [
-    require('acorn-private-methods'),
-    require('acorn-class-fields'),
     require('acorn-import-meta'),
     require('acorn-numeric-separator'),
     require('acorn-bigint'),
@@ -89,7 +87,7 @@ function ASTToTokens(ast) {
                 key: TOKENS_REVERSE[tok],
                 value: tok,
             },
-            line: node.loc.start.line - 1,
+            line: node.loc.start.line,
             column: node.loc.start.column,
             length,
         });
@@ -107,7 +105,7 @@ function ASTToTokens(ast) {
                 key: tokKey,
                 value: tok,
             },
-            line: node.loc.end.line - 1,
+            line: node.loc.end.line,
             column: Math.max(node.loc.end.column - 1, 0),
             length: 1,
         });
@@ -164,7 +162,14 @@ function ASTToTokens(ast) {
         },
 
         visitCallExpression({ value: node }) {
-            emit(T.APPLY, node, getLength(node.callee) + 1);
+            let len;
+            if (node.callee.type == 'MemberExpression') {
+                node = node.callee.property;
+                len = getLength(node);
+            } else {
+                len = getLength(node.callee);
+            }
+            emit(T.APPLY, node, len, node + 1);
         },
 
         visitIfStatement(path, _, visit) {
@@ -306,6 +311,10 @@ function ASTToTokens(ast) {
             emit(T.IMPORT, path, 'import'.length);
         },
 
+        visitImportExpression(path) {
+            emit(T.IMPORT, path, 'import'.length);
+        },
+
         visitAwaitExpression(path) {
             emit(T.AWAIT, path, 'await'.length);
         },
@@ -359,7 +368,15 @@ function doParse(filename) {
     const content = fs.readFileSync(filename, {
         encoding: 'utf-8'
     });
-    return ASTToTokens(parseToAst(content));
+    res = ASTToTokens(parseToAst(content));
+    res.sort((a, b) => {
+        let diff = a.line - b.line;
+        if (diff === 0) {
+            diff = a.column - b.column;
+        }
+        return diff;
+    });
+    return res;
 }
 
 if (process.argv[3] === 'AMOUNT') {
