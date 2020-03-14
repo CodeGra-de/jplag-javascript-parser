@@ -9,7 +9,7 @@
   "author": "Thomas Schaper",
   "license": "GPL-3.0",
   "dependencies": {
-    "acorn": "^7.1.0",
+    "acorn": "^7.1.1",
     "acorn-bigint": "^0.4.0",
     "acorn-class-fields": "^0.3.1",
     "acorn-import-meta": "^1.0.0",
