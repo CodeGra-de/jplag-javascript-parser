@@ -3,11 +3,13 @@ const fs = require('fs')
 const acorn = require("acorn");
 const acornLoose = require("acorn-loose");
 const { visit } = require('ast-types');
+
 const acornPlugins = [
     require('acorn-import-meta'),
     require('acorn-numeric-separator'),
     require('acorn-bigint'),
     require('acorn-jsx')(),
+    require('acorn-private-class-elements'),
 ];
 const acornLoosePlugins = [
     require('acorn-import-meta'),
